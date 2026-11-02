@@ -12,7 +12,7 @@ Both are standard LangChain `BaseTool`s, so they work with `bind_tools()`, `crea
 ## Install
 
 ```bash
-pip install "langchain-searchify[rerank] @ git+https://github.com/<owner>/langchain-searchify"
+pip install "langchain-searchify[rerank] @ git+https://github.com/felixvew/langchain-searchify"
 ```
 
 The `[rerank]` extra adds `sentence-transformers` (and PyTorch) for searchify's local cross-encoder. Without it the tools still work, but passages come back in page order instead of by relevance.
