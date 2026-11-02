@@ -26,9 +26,10 @@ class SearchifySearchInput(BaseModel):
         "translate it. Only add what the conversation makes clear, such as names, events or "
         "years. Always replace relative times with the actual year or date from today's date: "
         '"this year", "cette année" or "dieses Jahr" become the year, "last weekend" becomes '
-        'the dates. Example: after a question about the Champions League final, "and who '
+        'the dates. Examples: after a question about the Champions League final, "and who '
         'scored?" becomes "Who scored in the Champions League final between Paris '
-        'Saint-Germain and Arsenal?"'
+        'Saint-Germain and Arsenal?". A question that is already complete stays as it is: '
+        '"Wie viele Einwohner hat Luxemburg?" stays "Wie viele Einwohner hat Luxemburg?"'
     )
     topic: Optional[Literal["general", "news"]] = Field(
         default="general",
