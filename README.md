@@ -124,15 +124,15 @@ The script asks "Who won this years Ballon d'Or ?". It first prints the search a
 
 ```text
 {'query': "Who won the 2026 Ballon d'Or?", 'topic': 'news', 'time_range': 'year'}
-{'messages': [HumanMessage(...)],
+{'messages': [HumanMessage(...), AIMessage(...)],
  'web_search_results': [{'title': "2026 Ballon d'Or rankings in full ...", 'url': 'https://...', 'content': '...', 'score': 10.8}, ...],
- 'generation': AIMessage(content="Harry Kane won the 2026 Ballon d'Or. ...")}
+ 'generation': "Harry Kane won the 2026 Ballon d'Or. ..."}
 ```
 
 **How it works**
 
 - **`web_search` node:** the model is bound to `SearchifySearch` with `tool_choice`, so it has to write a search query instead of answering from memory. The tool's description tells it to write a complete question. The node passes only that query to the search, ignoring any filters the model set, and writes the passages to `web_search_results` in the graph state.
-- **`generate` node:** puts those passages into the prompt and writes the answer.
+- **`generate` node:** puts the passages and today's date into a system message, followed by the last messages of the conversation, and writes the answer. It also adds the answer to `messages`, so the same graph works as a chat: compile it with a checkpointer and pass a `thread_id`, and follow-up questions see the earlier answers.
 - **Today's date** is in both prompts, and the query prompt also has the time rule. Without the date, a model whose training data ends in 2023 reads "this year" as 2023: the query step searches for the wrong year, and the answer step takes this year's results for the future.
 
 **vLLM settings the demo relies on** (in [`vllm/docker-compose.yml`](vllm/docker-compose.yml))
