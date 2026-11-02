@@ -186,3 +186,7 @@ A big thank you to Sami Magdouli for [searchify](https://github.com/sami-mag07/s
 I came across searchify while looking for a web search tool to test agents locally without running into the limits of hosted search APIs. It does the hard part: web search, clean page extraction and reranking, all on your own machine and without an API key. This package only adds the LangChain layer on top, so searchify can be used directly in LangChain and LangGraph agents.
 
 The logo is adapted from searchify's logo (MIT License).
+
+## License
+
+This project is released under the MIT License. See [LICENSE](LICENSE).
