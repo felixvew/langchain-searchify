@@ -138,6 +138,7 @@ Settings you choose when you create a tool. The model can't change them.
 | `include_page_content` | `True` | Read the result pages and return their best passages; `False` returns only search snippets |
 | `top_k` | `8` | Passages to return |
 | `rerank` | `None` (on if `[rerank]` is installed) | Rank passages by relevance with the local cross-encoder. `False` turns it off; `True` raises an error if the extra is missing |
+| `reranker` | `None` | A loaded reranker to use instead of searchify's default model ([see below](#using-a-different-reranker)) |
 | `min_words` | `12` | Shorter paragraphs are not used as passages |
 | `max_chars` | `600` | Each passage or snippet is trimmed to this length |
 | `backend` | `None` | `"duckduckgo"`, `"searxng"`, `"serper"` or `"tavily"`; `None` uses searchify's configured chain |
@@ -150,9 +151,29 @@ The model can also filter by `time_range`, but only with `"month"` or `"year"`. 
 | `max_chars` | `4000` | Each page's text is trimmed to this length |
 | `format` | `"text"` | `"text"` or `"markdown"` |
 | `rerank` | `None` (on if `[rerank]` is installed) | When the model passes a `query`, put the matching paragraphs first. `False` turns it off |
+| `reranker` | `None` | A loaded reranker to use instead of searchify's default model ([see below](#using-a-different-reranker)) |
 | `timeout` | `None` | Fetch timeout per page in seconds |
 
 Everything the tools return goes back into the model's context, so lower `top_k` and `max_chars` for models with small context windows.
+
+### Using a different reranker
+
+searchify picks its reranker from the `RERANKER_MODEL` variable, but some models need extra loading options, such as `trust_remote_code=True`. Load the model yourself and pass it to the tools:
+
+```python
+from sentence_transformers import CrossEncoder
+
+reranker = CrossEncoder("Alibaba-NLP/gte-multilingual-reranker-base", trust_remote_code=True)
+search = SearchifySearch(reranker=reranker)
+extract = SearchifyExtract(reranker=reranker)  # both tools can share one loaded model
+```
+
+Anything with a `predict(pairs)` method that returns one score per `(query, text)` pair works.
+
+Load the model where your app starts, for example in FastAPI's `lifespan`, or under `if __name__ == "__main__":`. At the top level of the script you run, every extraction worker would load its own copy, because the workers re-import that script.
+
+> [!WARNING]
+> `trust_remote_code=True` downloads Python code from Hugging Face and runs it on your machine, sometimes from a different repository than the model itself. Only use it for publishers you trust.
 
 searchify itself is configured through environment variables:
 

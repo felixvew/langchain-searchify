@@ -207,3 +207,50 @@ def test_extract_nothing_readable_tells_the_agent(calls: Dict[str, Any]) -> None
     result = SearchifyExtract().invoke({"urls": ["https://missing.example/"]})
 
     assert "None of these pages could be read" in result
+
+
+class KeywordReranker:
+    """Stands in for a CrossEncoder: 10 for texts containing the keyword, 0 otherwise."""
+
+    def __init__(self, keyword: str) -> None:
+        self.keyword = keyword
+        self.pairs: List[tuple] = []
+
+    def predict(self, pairs: List[tuple]) -> List[float]:
+        self.pairs.extend(pairs)
+        return [10.0 if self.keyword in text else 0.0 for _, text in pairs]
+
+
+def no_default_rerank(*args: Any, **kwargs: Any) -> List[Dict]:
+    raise AssertionError("searchify's default reranker ran although a custom one was given")
+
+
+def test_search_uses_custom_reranker(calls: Dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(_utilities, "rerank", no_default_rerank)
+    reranker = KeywordReranker("Beta")
+
+    result = SearchifySearch(top_k=2, reranker=reranker).invoke({"query": "q"})
+
+    assert [r["content"].split()[0] for r in result["results"]] == ["Beta", "Alpha"]
+    assert [r["score"] for r in result["results"]] == [10.0, 0.0]
+    assert {query for query, _ in reranker.pairs} == {"q"}
+
+
+def test_custom_reranker_needs_no_extra(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(_utilities, "rerank_available", lambda: False)
+    reranker = KeywordReranker("Beta")
+
+    assert SearchifySearch(reranker=reranker).rerank is True
+    assert SearchifySearch(reranker=reranker, rerank=True).rerank is True
+    assert SearchifySearch(reranker=reranker, rerank=False).rerank is False
+    assert SearchifyExtract(reranker=reranker).rerank is True
+
+
+def test_extract_query_uses_custom_reranker(calls: Dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(_utilities, "rerank", no_default_rerank)
+
+    result = SearchifyExtract(reranker=KeywordReranker("Alpha")).invoke(
+        {"urls": ["https://a.example/1"], "query": "alpha"}
+    )
+
+    assert result["results"][0]["content"].startswith("Alpha")

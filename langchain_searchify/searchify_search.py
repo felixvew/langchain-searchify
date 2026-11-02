@@ -94,7 +94,12 @@ class SearchifySearch(BaseTool):  # type: ignore[override]
     """Number of passages to return when include_page_content is True."""
     rerank: Optional[bool] = None
     """Order passages by relevance with searchify's local cross-encoder. None uses it
-    if the [rerank] extra is installed, otherwise passages keep their page order."""
+    if the [rerank] extra is installed or a `reranker` is given, otherwise passages keep
+    their page order."""
+    reranker: Optional[Any] = None
+    """A loaded reranker to use instead of searchify's default model, e.g. a
+    sentence-transformers CrossEncoder created with trust_remote_code=True. Anything with
+    a predict(pairs) method that returns one score per (query, text) pair works."""
     min_words: int = 12
     """Paragraphs with fewer words are not used as passages."""
     max_chars: int = 600
@@ -105,7 +110,7 @@ class SearchifySearch(BaseTool):  # type: ignore[override]
 
     @model_validator(mode="after")
     def _resolve_rerank(self) -> "SearchifySearch":
-        self.rerank = resolve_rerank(self.rerank)
+        self.rerank = resolve_rerank(self.rerank, custom=self.reranker is not None)
         return self
 
     def _run(
@@ -149,7 +154,7 @@ class SearchifySearch(BaseTool):  # type: ignore[override]
     def _passages(self, query: str, hits: List[Dict]) -> List[Dict]:
         pages = extract([h["url"] for h in hits])
         passages = split_passages(pages, self.min_words)
-        best = best_passages(query, passages, self.top_k, bool(self.rerank))
+        best = best_passages(query, passages, self.top_k, bool(self.rerank), self.reranker)
         for passage in best:
             passage["content"] = trim(passage["content"], self.max_chars)
         return best

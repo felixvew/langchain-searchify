@@ -65,7 +65,12 @@ class SearchifyExtract(BaseTool):  # type: ignore[override]
     """Output format of the page text."""
     rerank: Optional[bool] = None
     """Use searchify's local cross-encoder to put the parts matching `query` first.
-    None uses it if the [rerank] extra is installed; without it, `query` is ignored."""
+    None uses it if the [rerank] extra is installed or a `reranker` is given; without
+    either, `query` is ignored."""
+    reranker: Optional[Any] = None
+    """A loaded reranker to use instead of searchify's default model, e.g. a
+    sentence-transformers CrossEncoder created with trust_remote_code=True. Anything with
+    a predict(pairs) method that returns one score per (query, text) pair works."""
     min_words: int = 12
     """Paragraphs with fewer words are not ranked separately when a query is given."""
     timeout: Optional[float] = None
@@ -73,7 +78,7 @@ class SearchifyExtract(BaseTool):  # type: ignore[override]
 
     @model_validator(mode="after")
     def _resolve_rerank(self) -> "SearchifyExtract":
-        self.rerank = resolve_rerank(self.rerank)
+        self.rerank = resolve_rerank(self.rerank, custom=self.reranker is not None)
         return self
 
     def _run(
@@ -109,7 +114,7 @@ class SearchifyExtract(BaseTool):  # type: ignore[override]
 
     def _focus(self, query: str, docs: List[Dict]) -> Dict[str, str]:
         """Each page's paragraphs, most relevant to the query first."""
-        ranked = best_passages(query, split_passages(docs, self.min_words), None, True)
+        ranked = best_passages(query, split_passages(docs, self.min_words), None, True, self.reranker)
         by_url: Dict[str, List[str]] = {}
         for passage in ranked:
             by_url.setdefault(passage["url"], []).append(passage["content"])
