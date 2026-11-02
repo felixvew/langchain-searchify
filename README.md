@@ -187,6 +187,10 @@ I came across searchify while looking for a web search tool to test agents local
 
 The logo is adapted from searchify's logo (MIT License).
 
+## Disclaimer
+
+langchain-searchify is a community integration and is not affiliated with or endorsed by LangChain, Inc.
+
 ## License
 
 This project is released under the MIT License. See [LICENSE](LICENSE).
