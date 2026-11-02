@@ -24,11 +24,12 @@ from pydantic import BaseModel, Field
 
 import os
 from datetime import date
+from pathlib import Path
 from dotenv import load_dotenv
 
 from langchain_searchify import SearchifySearch
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / "vllm" / ".env")  # the same file docker compose reads
 model = ChatOpenAI(
         model=os.environ['VLLM_MODEL'],
         base_url="http://localhost:8001/v1",

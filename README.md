@@ -57,6 +57,77 @@ builder.add_conditional_edges("agent", tools_condition)
 > [!IMPORTANT]
 > searchify reads pages in a `spawn` process pool, on every operating system. Each worker re-imports your main script, so put your script's top-level code under `if __name__ == "__main__":`. Without the guard, that code runs again in every worker.
 
+## Demo: LangGraph agent with a local LLM
+
+[`examples/langchain-searchify_test.py`](examples/langchain-searchify_test.py) is a small LangGraph graph that answers questions from the web with a model you host yourself through vLLM. No API key is needed.
+
+```mermaid
+flowchart LR
+    Q[Question] --> S["web_search node<br/>model writes the query,<br/>SearchifySearch runs"]
+    S --> R[("state:<br/>web_search_results")]
+    R --> G["generate node<br/>answers from the passages"]
+```
+
+You need an NVIDIA GPU, Docker with GPU support (the NVIDIA Container Toolkit, or Docker Desktop with WSL 2 on Windows) and Python 3.10 or newer.
+
+**1. Choose the model.** Create `vllm/.env` (it's gitignored):
+
+```ini
+VLLM_MODEL=Qwen/Qwen3-8B-AWQ
+# Optional: only needed for gated models
+HF_TOKEN=
+```
+
+Docker Compose and the example both read `VLLM_MODEL` from this file.
+
+**2. Start vLLM.**
+
+```bash
+cd vllm
+docker compose up -d
+docker compose logs -f vllm
+```
+
+The first start downloads the model into the `huggingface-cache` Docker volume, which can take a while. The server is ready when the log shows `Application startup complete`. To check it, run `curl http://localhost:8001/v1/models`.
+
+**3. Install the Python packages.**
+
+```bash
+pip install "langchain-searchify[rerank] @ git+https://github.com/felixvew/langchain-searchify" langchain langgraph langchain-openai python-dotenv
+```
+
+**4. Run the agent** from the repository root:
+
+```bash
+python examples/langchain-searchify_test.py
+```
+
+The script asks "Qui a gagné le ballon d'or cette année ?" ("Who won the Ballon d'Or this year?"). It first prints the search arguments the model wrote, then the final state. The exact query and passages vary from run to run; shortened, the output looks like this:
+
+```text
+{'query': "Ballon d'Or 2026 winner", 'topic': 'news', 'time_range': 'year', 'language': 'en'}
+{'messages': [HumanMessage(...)],
+ 'web_search_results': [{'title': "2026 Ballon d'Or rankings in full ...", 'url': 'https://...', 'content': '...', 'score': 10.8}, ...],
+ 'generation': AIMessage(content="Harry Kane a gagné le Ballon d'Or 2026. ...")}
+```
+
+**How it works**
+
+- **`web_search` node:** the model is bound to `SearchifySearch` with `tool_choice`, so it has to turn the question into search arguments instead of answering from memory. The node runs the tool itself and writes the passages to `web_search_results` in the graph state.
+- **`generate` node:** puts those passages into the prompt and writes the answer.
+- **Today's date** is part of the query prompt. Without it, a model whose training data ends in 2023 reads "this year" as 2023 and searches for the wrong year.
+
+**vLLM settings the demo relies on** (in [`vllm/docker-compose.yml`](vllm/docker-compose.yml))
+
+| Setting | Why |
+|---|---|
+| `--enable-auto-tool-choice`, `--tool-call-parser hermes` | Let Qwen3 make tool calls through the OpenAI-compatible API |
+| `--reasoning-parser qwen3` | Keeps the model's thinking out of the answer text |
+| `--max-model-len -1` | Uses as much context as fits in GPU memory. On smaller GPUs that can be only about 5,000 tokens, which is why the example uses `top_k=5, max_chars=500` |
+| Port `8001:8000` | The example connects to `http://localhost:8001/v1` |
+
+Stop the server with `docker compose down`; the downloaded model stays in the volume. Once it's downloaded, you can add `HF_HUB_OFFLINE=1` to `vllm/.env` so vLLM starts without contacting Hugging Face.
+
 ## Configuration
 
 Settings you choose when you create a tool. The model can't change them.
