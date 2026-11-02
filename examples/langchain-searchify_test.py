@@ -65,7 +65,9 @@ def local_search_tool(state: WebSearchAgentState) -> dict:
     return {"web_search_results": result["results"]}
 
 
-GENERATE_PROMPT = """You are an assistant for question-answering tasks.
+# the answer step needs the date too, otherwise this year's results look like the future to the model
+GENERATE_PROMPT = """Today's date is {today}.
+You are an assistant for question-answering tasks.
 Use the following pieces of retrieved context to answer the question.
 
 Question: {question}
@@ -76,7 +78,7 @@ Context: {context}
 def generate_response(state: WebSearchAgentState):
     question = state["messages"][-1].content
     context = state["web_search_results"]
-    generate_prompt_formatted = GENERATE_PROMPT.format(question=question, context=context)
+    generate_prompt_formatted = GENERATE_PROMPT.format(today=date.today().isoformat(), question=question, context=context)
     answer = model.invoke([HumanMessage(content=generate_prompt_formatted)])
 
     return {"generation": answer}

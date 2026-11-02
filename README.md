@@ -120,20 +120,20 @@ pip install "langchain-searchify[rerank] @ git+https://github.com/felixvew/langc
 python examples/langchain-searchify_test.py
 ```
 
-The script asks "Qui a gagné le ballon d'or cette année ?" ("Who won the Ballon d'Or this year?"). It first prints the search arguments the model wrote, then the final state. The exact query and passages vary from run to run; shortened, the output looks like this:
+The script asks "Who won this years Ballon d'Or ?". It first prints the search arguments the model wrote, then the final state. Only the query is used for the search. The exact query and passages vary from run to run; shortened, the output looks like this:
 
 ```text
-{'query': "Ballon d'Or 2026 winner", 'topic': 'news', 'time_range': 'year', 'language': 'en'}
+{'query': "Who won the 2026 Ballon d'Or?", 'topic': 'news', 'time_range': 'year'}
 {'messages': [HumanMessage(...)],
  'web_search_results': [{'title': "2026 Ballon d'Or rankings in full ...", 'url': 'https://...', 'content': '...', 'score': 10.8}, ...],
- 'generation': AIMessage(content="Harry Kane a gagné le Ballon d'Or 2026. ...")}
+ 'generation': AIMessage(content="Harry Kane won the 2026 Ballon d'Or. ...")}
 ```
 
 **How it works**
 
-- **`web_search` node:** the model is bound to `SearchifySearch` with `tool_choice`, so it has to turn the question into search arguments instead of answering from memory. The node runs the tool itself and writes the passages to `web_search_results` in the graph state.
+- **`web_search` node:** the model is bound to `SearchifySearch` with `tool_choice`, so it has to write a search query instead of answering from memory. The tool's description tells it to write a complete question. The node passes only that query to the search, ignoring any filters the model set, and writes the passages to `web_search_results` in the graph state.
 - **`generate` node:** puts those passages into the prompt and writes the answer.
-- **Today's date** is part of the query prompt. Without it, a model whose training data ends in 2023 reads "this year" as 2023 and searches for the wrong year.
+- **Today's date** is in both prompts, and the query prompt also has the time rule. Without the date, a model whose training data ends in 2023 reads "this year" as 2023: the query step searches for the wrong year, and the answer step takes this year's results for the future.
 
 **vLLM settings the demo relies on** (in [`vllm/docker-compose.yml`](vllm/docker-compose.yml))
 
