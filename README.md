@@ -60,6 +60,21 @@ builder.add_conditional_edges("agent", tools_condition)
 > [!IMPORTANT]
 > searchify reads pages in a `spawn` process pool, on every operating system. Each worker re-imports your main script, so put your script's top-level code under `if __name__ == "__main__":`. Without the guard, that code runs again in every worker.
 
+### What to put in the system prompt
+
+Every model call that writes a search query or an answer needs today's date. Small models also need the time rule:
+
+```python
+SYSTEM_PROMPT = """Today's date is {today}.
+If the message contains textual forms of times, like this year, always use today's date in place."""
+
+system_message = SystemMessage(content=SYSTEM_PROMPT.format(today=date.today().isoformat()))
+```
+
+- **Writing the query:** the date and the time rule. The tool's description already tells the model how to word the query. In testing with Qwen3-8B, the date alone left "cette année" unchanged; with the time rule next to it, the model wrote the year.
+- **Writing the answer:** the date as well. Without it, a model whose training data ends earlier can take this year's results for the future and say the answer isn't there.
+- **Search filters:** a prompt doesn't reliably stop small models from setting filters such as `topic` or `language`, which can hide the answer. If you call the tool yourself, pass only the query: `search_tool.invoke({"query": args["query"]})`.
+
 ## Demo: LangGraph agent with a local LLM
 
 [`examples/langchain-searchify_test.py`](examples/langchain-searchify_test.py) is a small LangGraph graph that answers questions from the web with a model you host yourself through vLLM. No API key is needed.
