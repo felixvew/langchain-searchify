@@ -20,7 +20,7 @@ Both are standard LangChain `BaseTool`s, so they work with `bind_tools()`, `crea
 pip install "langchain-searchify[rerank] @ git+https://github.com/felixvew/langchain-searchify"
 ```
 
-The `[rerank]` extra adds `sentence-transformers` (and PyTorch) for searchify's local cross-encoder. Without it the tools still work, but passages come back in page order instead of by relevance.
+The `[rerank]` extra adds `sentence-transformers` (and PyTorch) for searchify's local cross-encoder. When it's installed, reranking is on by default; create a tool with `rerank=False` to turn it off. Without the extra the tools still work, but passages come back in page order instead of by relevance.
 
 ## Use
 
@@ -137,7 +137,7 @@ Settings you choose when you create a tool. The model can't change them.
 | `max_results` | `5` | Search hits to look at |
 | `include_page_content` | `True` | Read the result pages and return their best passages; `False` returns only search snippets |
 | `top_k` | `8` | Passages to return |
-| `rerank` | `None` | Rank passages with the local cross-encoder; `None` means "if `[rerank]` is installed" |
+| `rerank` | `None` (on if `[rerank]` is installed) | Rank passages by relevance with the local cross-encoder. `False` turns it off; `True` raises an error if the extra is missing |
 | `min_words` | `12` | Shorter paragraphs are not used as passages |
 | `max_chars` | `600` | Each passage or snippet is trimmed to this length |
 | `backend` | `None` | `"duckduckgo"`, `"searxng"`, `"serper"` or `"tavily"`; `None` uses searchify's configured chain |
@@ -147,7 +147,7 @@ Settings you choose when you create a tool. The model can't change them.
 | `max_urls` | `3` | URLs read per call; the rest are reported as `skipped_urls` |
 | `max_chars` | `4000` | Each page's text is trimmed to this length |
 | `format` | `"text"` | `"text"` or `"markdown"` |
-| `rerank` | `None` | When the model passes a `query`, put the matching paragraphs first |
+| `rerank` | `None` (on if `[rerank]` is installed) | When the model passes a `query`, put the matching paragraphs first. `False` turns it off |
 | `timeout` | `None` | Fetch timeout per page in seconds |
 
 Everything the tools return goes back into the model's context, so lower `top_k` and `max_chars` for models with small context windows.
