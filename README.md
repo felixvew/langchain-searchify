@@ -1,4 +1,9 @@
-# langchain-searchify
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo-light.svg" alt="langchain-searchify" width="680">
+  </picture>
+</p>
 
 LangChain tools for [searchify](https://github.com/sami-mag07/searchify-l): web search, clean page text and local reranking, with no paid search API or API key.
 
@@ -102,3 +107,7 @@ pytest tests/integration_tests  # real searches, needs internet
 ## Why it's not on PyPI
 
 searchify isn't on PyPI yet, and PyPI rejects packages that depend on a Git URL. Until searchify is published there, install this package from GitHub.
+
+## Credits
+
+The logo is adapted from [searchify](https://github.com/sami-mag07/searchify-l)'s logo (MIT License).
