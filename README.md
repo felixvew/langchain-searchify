@@ -54,6 +54,9 @@ builder.add_node("tools", ToolNode(tools))
 builder.add_conditional_edges("agent", tools_condition)
 ```
 
+> [!NOTE]
+> **Search with full questions, not keywords.** searchify has no search index of its own. The query goes as written to public search engines (DuckDuckGo, or the engines behind your SearXNG instance), and the same query is then used to rerank the passages. So a complete question in the user's language works better than a short keyword query. In testing, "Wer hat das ATP 500 Turnier in Basel übers Wochenende gewonnen?" put the answer first, while the keyword version "ATP 500 Basel winner 2026" ranked it third. The `query` description tells models to write full questions and to replace relative times like "this year" with the actual year, so <b>always include today's date in your system prompt</b>.
+
 > [!IMPORTANT]
 > searchify reads pages in a `spawn` process pool, on every operating system. Each worker re-imports your main script, so put your script's top-level code under `if __name__ == "__main__":`. Without the guard, that code runs again in every worker.
 

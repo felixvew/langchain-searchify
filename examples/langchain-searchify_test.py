@@ -46,16 +46,19 @@ class WebSearchAgentState(TypedDict):
     generation: str
 
 # Using a small local model whos training data only goes up to 2023, we need to add todays date in the system prompt
+# How to word the query is part of the tool's description; the time rule also goes here, next to the date
 QUERY_PROMPT = """Today's date is {today}.
-Search the web for the information needed to answer the user's question."""
+Search the web for the information needed to answer the user's question.
+If the message contains textual forms of times, like this year, always use todays date in place."""
 
 def local_search_tool(state: WebSearchAgentState) -> dict:
     """Let the model write a search query, run SearchifySearch and put the passages into the state."""
     system_prompt = SystemMessage(content=QUERY_PROMPT.format(today=date.today().isoformat()))
     query_call = query_writer.invoke([system_prompt] + state["messages"])
-    search_args = query_call.tool_calls[0]["args"]           # e.g. {"query": "Ballon d'Or 2026 winner", "topic": "news"}
+    search_args = query_call.tool_calls[0]["args"]           # e.g. {"query": "Who won the 2026 Ballon d'Or?", "topic": "news"}
     print(search_args)
-    result = search_tool.invoke(search_args)                  # a dict, or an error message if the search failed
+    # only the query: the filters the model picks (topic, time range, language) often hide the answer
+    result = search_tool.invoke({"query": search_args["query"]})   # a dict, or an error message if the search failed
     if isinstance(result, str):
         print(result)
         return {"web_search_results": []}

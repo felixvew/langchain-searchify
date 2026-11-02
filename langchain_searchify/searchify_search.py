@@ -18,9 +18,17 @@ from langchain_searchify._utilities import (
 class SearchifySearchInput(BaseModel):
     """Input for [SearchifySearch]."""
 
+    # searchify has no index of its own: the query goes to public search engines as written and
+    # the passages are reranked against it, so a full question finds more than keywords
     query: str = Field(
-        description="Search query. Use short, precise keywords (names, places, dates) "
-        "rather than the user's whole question."
+        description="The user's question as one complete, standalone question, in the user's "
+        "language and worded the way they asked it. Do not shorten it to keywords and do not "
+        "translate it. Only add what the conversation makes clear, such as names, events or "
+        "years. Always replace relative times with the actual year or date from today's date: "
+        '"this year", "cette année" or "dieses Jahr" become the year, "last weekend" becomes '
+        'the dates. Example: after a question about the Champions League final, "and who '
+        'scored?" becomes "Who scored in the Champions League final between Paris '
+        'Saint-Germain and Arsenal?"'
     )
     topic: Optional[Literal["general", "news"]] = Field(
         default="general",
