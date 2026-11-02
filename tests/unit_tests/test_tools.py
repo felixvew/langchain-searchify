@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Type
 
 import pytest
 from langchain_tests.unit_tests import ToolsUnitTests
+from pydantic import ValidationError
 from searchify import SearchBackendError
 
 from langchain_searchify import SearchifyExtract, SearchifySearch, _utilities
@@ -99,16 +100,24 @@ def test_search_skips_short_and_repeated_paragraphs(calls: Dict[str, Any]) -> No
 
 def test_search_passes_filters_and_settings(calls: Dict[str, Any]) -> None:
     SearchifySearch(max_results=1, backend="searxng").invoke(
-        {"query": "q", "topic": "news", "time_range": "week", "language": "fr",
+        {"query": "q", "topic": "news", "time_range": "month", "language": "fr",
          "include_domains": ["lequipe.fr"], "exclude_domains": ["x.com"]}
     )
 
     assert calls["search"] == {
         "query": "q", "max_results": 1, "backend": "searxng", "topic": "news",
-        "time_range": "week", "language": "fr",
+        "time_range": "month", "language": "fr",
         "include_domains": ["lequipe.fr"], "exclude_domains": ["x.com"],
     }
     assert calls["extract"] == ["https://a.example/1"]
+
+
+@pytest.mark.parametrize("time_range", ["day", "week"])
+def test_search_rejects_short_time_ranges(calls: Dict[str, Any], time_range: str) -> None:
+    with pytest.raises(ValidationError):
+        SearchifySearch().invoke({"query": "q", "time_range": time_range})
+
+    assert "search" not in calls
 
 
 def test_search_snippets_only_reads_no_pages(calls: Dict[str, Any]) -> None:

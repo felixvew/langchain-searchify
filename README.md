@@ -142,6 +142,8 @@ Settings you choose when you create a tool. The model can't change them.
 | `max_chars` | `600` | Each passage or snippet is trimmed to this length |
 | `backend` | `None` | `"duckduckgo"`, `"searxng"`, `"serper"` or `"tavily"`; `None` uses searchify's configured chain |
 
+The model can also filter by `time_range`, but only with `"month"` or `"year"`. `"day"` and `"week"` are left out on purpose: small models pick them for questions about past events, such as "who won this year's award?", and the filter then hides the articles that answer the question.
+
 | `SearchifyExtract` | Default | Meaning |
 |---|---|---|
 | `max_urls` | `3` | URLs read per call; the rest are reported as `skipped_urls` |

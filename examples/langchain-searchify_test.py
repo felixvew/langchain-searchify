@@ -91,6 +91,7 @@ graph = builder.compile()
 
 # searchify extracts pages in a "spawn" process pool, which re-imports this file in every worker
 if __name__ == "__main__":
-    graph_input = {"messages": [HumanMessage(content="Qui a gagné le ballon d'or cette année ?")]}
+    #graph_input = {"messages": [HumanMessage(content="Qui a gagné le ballon d'or cette année ?")]}
+    graph_input = {"messages": [HumanMessage(content="Who won this years Ballon d'Or ?")]}
     print(graph.invoke(graph_input))
     #print(local_search_tool(state=graph_input))

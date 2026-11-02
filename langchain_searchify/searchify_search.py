@@ -26,9 +26,12 @@ class SearchifySearchInput(BaseModel):
         default="general",
         description='Use "news" for recent events and current affairs, "general" otherwise.',
     )
-    time_range: Optional[Literal["day", "week", "month", "year"]] = Field(
+    # no "day" or "week": small models pick them for questions about past events
+    # (e.g. "this year's winner") and the filter then hides the articles that answer them
+    time_range: Optional[Literal["month", "year"]] = Field(
         default=None,
-        description="Only return results published within this period before today.",
+        description="Only return results published within this period before today. Leave empty "
+        "unless the user explicitly asks for recent results.",
     )
     language: Optional[Literal["en", "de", "fr", "es"]] = Field(
         default=None,
@@ -109,7 +112,7 @@ class SearchifySearch(BaseTool):  # type: ignore[override]
         self,
         query: str,
         topic: Optional[Literal["general", "news"]] = "general",
-        time_range: Optional[Literal["day", "week", "month", "year"]] = None,
+        time_range: Optional[Literal["month", "year"]] = None,
         language: Optional[Literal["en", "de", "fr", "es"]] = None,
         include_domains: Optional[List[str]] = None,
         exclude_domains: Optional[List[str]] = None,
