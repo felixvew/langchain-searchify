@@ -65,7 +65,7 @@ class SearchifySearch(BaseTool):  # type: ignore[override]
     Setup:
         .. code-block:: bash
 
-            pip install "langchain-searchify[rerank] @ git+https://github.com/<owner>/langchain-searchify"
+            pip install "langchain-searchify[rerank] @ git+https://github.com/felixvew/langchain-searchify"
 
     Instantiate:
         .. code-block:: python

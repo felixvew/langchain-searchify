@@ -5,7 +5,7 @@
   </picture>
 </p>
 
-LangChain tools for [searchify](https://github.com/sami-mag07/searchify-l): web search, clean page text and local reranking, with no paid search API or API key.
+LangChain tools for [searchify](https://github.com/sami-mag07/searchify): web search, clean page text and local reranking, with no paid search API or API key.
 
 | Tool | What the model can do with it |
 |---|---|
@@ -253,13 +253,13 @@ pytest                          # unit tests, no network
 pytest tests/integration_tests  # real searches, needs internet
 ```
 
-## Why it's not on PyPI
+## PyPI
 
-searchify isn't on PyPI yet, and PyPI rejects packages that depend on a Git URL. Until searchify is published there, install this package from GitHub.
+searchify is on PyPI since version 0.3.0, and this package installs it from there (`searchify>=0.3.0,<0.4`). langchain-searchify itself isn't published on PyPI yet, so install it from GitHub for now.
 
 ## Acknowledgments
 
-A big thank you to Sami Magdouli for [searchify](https://github.com/sami-mag07/searchify-l).
+A big thank you to Sami Magdouli for [searchify](https://github.com/sami-mag07/searchify).
 
 I came across searchify while looking for a web search tool to test agents locally without running into the limits of hosted search APIs. It does the hard part: web search, clean page extraction and reranking, all on your own machine and without an API key. This package only adds the LangChain layer on top, so searchify can be used directly in LangChain and LangGraph agents.
 
