@@ -27,6 +27,7 @@ services:
       --enforce-eager
       --enable-auto-tool-choice
       --tool-call-parser hermes
+      --kv-cache-dtype fp8
       --kv-transfer-config '{
           "kv_connector": "OffloadingConnector",
           "kv_role": "kv_both",
