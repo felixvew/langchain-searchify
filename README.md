@@ -146,6 +146,43 @@ The script asks "Who won this years Ballon d'Or ?". It first prints the search a
 
 Stop the server with `docker compose down`; the downloaded model stays in the volume. Once it's downloaded, you can add `HF_HUB_OFFLINE=1` to `vllm/.env` so vLLM starts without contacting Hugging Face.
 
+### Optional: search through SearXNG instead of DuckDuckGo
+
+By default each search goes to DuckDuckGo's search library, which picks one engine at random per call, so results vary between identical searches. [SearXNG](https://docs.searxng.org/) is a metasearch engine you run yourself: it asks several engines at once and merges their results. The [`searxng`](searxng) folder has a ready setup.
+
+**1. Configure it.** Create `searxng/.env` (it's gitignored):
+
+```ini
+SEARXNG_SECRET=<random key>
+SEARCH_BACKEND=searxng
+SEARXNG_URL=http://localhost:8080
+SEARCH_FALLBACK=duckduckgo
+```
+
+Create the key with `python -c "import secrets; print(secrets.token_hex(32))"`; SearXNG won't start with its default placeholder. Docker Compose reads `SEARXNG_SECRET` from this file, and the example reads the `SEARCH_…` settings from it. `SEARCH_FALLBACK=duckduckgo` keeps searches working when the container is down.
+
+**2. Start it and check that it answers.**
+
+```bash
+cd searxng
+docker compose up -d
+curl "http://localhost:8080/search?q=test&format=json"
+```
+
+In Windows PowerShell, use `curl.exe`. The response should be JSON with a `results` list.
+
+**3. Run the example as before.** The search hits now come from SearXNG.
+
+What the setup does:
+
+| File | Setting | Why |
+|---|---|---|
+| `searxng/config/settings.yml` | `search.formats` includes `json` | searchify reads SearXNG's JSON results; without it every search fails |
+| `searxng/config/settings.yml` | `server.limiter: false` | No bot limiter on a private instance (it would need an extra Valkey database) |
+| `searxng/docker-compose.yml` | Port `127.0.0.1:8080:8080` | Only this machine can use the instance, not the rest of your network |
+
+SearXNG still sends every query to the engines it uses (Google, Bing, Brave and others), just from one server and without cookies or user tracking; see [Privacy](#privacy). Some engines, Google in particular, block SearXNG instances now and then, so expect individual engines to drop out. Stop it with `docker compose down` in the `searxng` folder.
+
 ## Configuration
 
 Settings you choose when you create a tool. The model can't change them.
@@ -206,7 +243,7 @@ searchify itself is configured through environment variables:
 
 ## Privacy
 
-"No API key" doesn't mean offline. With the default setup, the model's search queries go to DuckDuckGo and the result pages are fetched from their websites. If `SERPER_API_KEY` or `TAVILY_API_KEY` is set, queries can also go to those services. Don't send confidential information in queries. To keep searches inside your own network, point `SEARCH_BACKEND` at a self-hosted SearXNG instance.
+"No API key" doesn't mean offline. With the default setup, the model's search queries go to DuckDuckGo and the result pages are fetched from their websites. If `SERPER_API_KEY` or `TAVILY_API_KEY` is set, queries can also go to those services. Don't send confidential information in queries. A self-hosted SearXNG instance doesn't change that: it forwards every query to public search engines too, only without cookies or tracking that link the queries to individual users.
 
 ## Development
 

@@ -30,6 +30,7 @@ from dotenv import load_dotenv
 from langchain_searchify import SearchifySearch
 
 load_dotenv(Path(__file__).resolve().parents[1] / "vllm" / ".env")  # the same file docker compose reads
+load_dotenv(Path(__file__).resolve().parents[1] / "searxng" / ".env")  # optional: SEARCH_BACKEND=searxng to search through SearXNG
 model = ChatOpenAI(
         model=os.environ['VLLM_MODEL'],
         base_url="http://localhost:8001/v1",

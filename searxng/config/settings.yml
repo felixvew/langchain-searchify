@@ -1,0 +1,10 @@
+use_default_settings: true
+
+server:
+  limiter: false   # private instance: no bot limiter (it would need an extra Valkey database)
+  image_proxy: false
+
+search:
+  formats:
+    - html
+    - json         # searchify reads the JSON results
